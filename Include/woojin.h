@@ -4,4 +4,9 @@
 
 typedef        int type_t;
 typedef struct CompilerMessage CompilerMessage;
+typedef struct Token Token;
+typedef struct Tokenizer Tokenizer;
+typedef enum   TokenKind TokenKind;
+typedef enum   CharType CharType;
+typedef struct List List;
 #endif

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "mem.h"
 #include "error.h"
+#include "tokenizer.h"
 
 #define READSIZE 512
 
@@ -39,6 +40,12 @@ int main(int argc, char *argv[]) {
   }
   if (buffer == NULL) EEXIT(E_NOWJCF);
   printf("code:\n%s\n", buffer);
+  Tokenizer* tz = w__Tokenizer__scan(buffer);
+  printf("\ntokens:\n");
+  for (size_t i = 0;i<tz->tokens.size;i++) {
+    printf("%4d %s\n", ((Token*)tz->tokens.items[i])->kind, ((Token*)tz->tokens.items[i])->token);
+  }
   FREE(buffer);
+  FREE(tz);
   return 0;
 }

@@ -25,4 +25,5 @@ void lastError();
 #define E_MEMALLOC L"Виділення пам'яті не вдалося."
 #define E_UNCLOSEDSTR L"Схоже, рядок не був коректно закритий."
 #define E_UNKNOWNCH L"Це невідомий символ. Перевірте, чи ви ввели правильний символ."
+#define E_EMPTYARR L"Масив порожній."
 #endif
