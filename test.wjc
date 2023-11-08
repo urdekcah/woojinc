@@ -1,3 +1,7 @@
-fn main() {
+const Hello: i32 = 0;
+
+fn main() -> i32 {
+  let a: i32 = 0;
+  println("{}", a);
   yee 0;
 }

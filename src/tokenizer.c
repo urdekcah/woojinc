@@ -85,8 +85,10 @@ Token w__Tokenizer__scan_String(Tokenizer* _a1) {
   char* _r2 = (char*)calloc(_r1,sizeof(char));
   if (_r2 == NULL) EEXIT(E_MEMALLOC);
   int _r3 = _a1->lineno, _r4 = _a1->coloff, _r5 = 0;
-  while(w__Tokenizer__is_CharType(*(_a1->current), CharStringLiteral)) {
-    _a1->coloff++;_r2[_r5++] = *(_a1->current++);
+  _a1->coloff++;_a1->current++;
+  while (w__Tokenizer__is_CharType(*(_a1->current), CharStringLiteral)) {
+    _a1->coloff++;
+    _r2[_r5++] = *(_a1->current++);
     if (_r5 >= _r1) {
       _r1 *= 2;
       char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
@@ -94,9 +96,8 @@ Token w__Tokenizer__scan_String(Tokenizer* _a1) {
       _r2 = _r6;
     }
   }
-  if (*_a1->current != '\"') MULTI(FREE(_r2);EEXIT(E_UNCLOSEDSTR));
-  _a1->coloff++;
-  _a1->current++;
+  if (*_a1->current != '\"') EEXIT(E_UNCLOSEDSTR);
+  _a1->coloff++;_a1->current++;
   _r2[_r5] = '\0';
   return (Token){
     .kind = TOKEN_STRING_LITERAL,
@@ -178,7 +179,7 @@ CharType w__Tokenizer__get_CharType(char _a1) {
 bool w__Tokenizer__is_CharType(char _a1, CharType _a2) {
   switch(_a2) {
     case CharNumberLiteral: return ('0' <= _a1 && _a1 <= '9');
-    case CharStringLiteral: return (32 <= _a1 && _a1 <= 126 && _a1 != '\"');
+    case CharStringLiteral: return 32 <= _a1 && _a1 <= 126 && _a1 != '\"';
     case CharIdentAndKeyword: return ('0' <= _a1 && _a1 <= '9') || ('a' <= _a1 && _a1 <= 'z') || ('A' <= _a1 && _a1 <= 'Z');
     case CharOperatorAndPunctuator: return (33 <= _a1 && _a1 <= 47) || (58 <= _a1 && _a1 <= 64) || (91 <= _a1 && _a1 <= 96) || (123 <= _a1 && _a1 <= 126);
     default: return false;
