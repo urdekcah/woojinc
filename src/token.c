@@ -59,7 +59,7 @@ static struct {char* str; TokenKind kind;} w__Token__Token_String__Table[] = {
   {NULL}
 };
 
-TokenKind w__Token__parse_string__kind(char* _a1) {
+TokenKind w__Token__parse_string__kind(const char* _a1) {
   for(size_t i=0;w__Token__Token_String__Table[i].str!=NULL;i++) {
     if (strcmp(w__Token__Token_String__Table[i].str, _a1) == 0)
       return w__Token__Token_String__Table[i].kind;

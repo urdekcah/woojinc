@@ -2,9 +2,11 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
+#include "woojin.h"
 #include "mem.h"
 #include "error.h"
 #include "tokenizer.h"
+#include "map.h"
 
 #define READSIZE 512
 

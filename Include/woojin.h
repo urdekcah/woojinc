@@ -9,4 +9,6 @@ typedef struct Tokenizer Tokenizer;
 typedef enum   TokenKind TokenKind;
 typedef enum   CharType CharType;
 typedef struct List List;
+typedef struct MapItem MapItem;
+typedef struct Map Map;
 #endif

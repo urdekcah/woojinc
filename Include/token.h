@@ -69,6 +69,6 @@ struct Token {
   TokenKind kind;
 };
 
-TokenKind w__Token__parse_string__kind(char* _a1);
+TokenKind w__Token__parse_string__kind(const char* _a1);
 char*     w__Token__kind_into__string(TokenKind _a1);
 #endif
