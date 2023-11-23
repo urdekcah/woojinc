@@ -54,7 +54,7 @@ typedef struct w__ast__Statement w__ast__Statement;
 typedef enum   w__ast__StatementKind w__ast__StatementKind;
 typedef struct w__parser__Parser w__parser__Parser;
 typedef struct w__ast__IfGuardVar w__ast__IfGuardVar;
-typedef struct ComplierOption ComplierOption;
+typedef struct CompilerOption CompilerOption;
 typedef enum   TokenKind TokenKind;
 typedef enum   CharType CharType;
 typedef struct List List;

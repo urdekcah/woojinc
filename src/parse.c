@@ -20,7 +20,7 @@ char* getFileName();
 
 extern type_t _const_error_type;
 
-Array_w__ast__Node w__parser__Parser__parse(Tokenizer* tokenizer, ComplierOption* co) {
+Array_w__ast__Node w__parser__Parser__parse(Tokenizer* tokenizer, CompilerOption* co) {
   List result = __list_new();
   w__parser__Parser* self = w__parser__Parser__new(w__table__Table_new(), tokenizer->tokens, co);
   while (self->current->kind != TOKEN_EOT) {

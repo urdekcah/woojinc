@@ -8,14 +8,14 @@
 #include "error.h"
 #include "scope.h"
 
-w__parser__Parser* w__parser__Parser__new(Table* table, List tokens, ComplierOption* co) {
+w__parser__Parser* w__parser__Parser__new(Table* table, List tokens, CompilerOption* co) {
   w__parser__Parser* self = (w__parser__Parser*)malloc(sizeof(w__parser__Parser));
   if (self == NULL) ErrDetailExit(E_MEMALLOC);
   w__parser__Parser__init(self, table, tokens, co);
   return self;
 }
 
-void w__parser__Parser__init(w__parser__Parser* self, Table* table, List tokens, ComplierOption* co) {
+void w__parser__Parser__init(w__parser__Parser* self, Table* table, List tokens, CompilerOption* co) {
   self->table = table;
   self->tokens = tokens;
   self->current = (Token*)tokens.items[0];

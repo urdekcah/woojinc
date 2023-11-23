@@ -5,7 +5,7 @@
 #include "token.h"
 #include "language.h"
 #include "scope.h"
-#include "complier.h"
+#include "compiler.h"
 
 struct w__parser__Parser {
   Table* table;
@@ -13,7 +13,7 @@ struct w__parser__Parser {
   Token* current;
   int tidx;
   Scope* scope;
-	ComplierOption* co;
+	CompilerOption* co;
   bool inside_vlib_file;
 	bool inside_test_file;
 	bool inside_if;
@@ -53,11 +53,11 @@ struct w__parser__Parser {
   Array_w__error__Notice notices;
 };
 
-w__parser__Parser* w__parser__Parser__new(Table* table, List token, ComplierOption* co);
-void w__parser__Parser__init(w__parser__Parser* self, Table* table, List tokens, ComplierOption* co);
+w__parser__Parser* w__parser__Parser__new(Table* table, List token, CompilerOption* co);
+void w__parser__Parser__init(w__parser__Parser* self, Table* table, List tokens, CompilerOption* co);
 #define ParserInitDefault(self) w__parser__Parser__init(self, w__table__Table_new(), __list_new(), w__complier__option_default());
 void w__parser__Parser__InitDefault(w__parser__Parser* out);
-Array_w__ast__Node w__parser__Parser__parse(Tokenizer* tokenizer, ComplierOption* co);
+Array_w__ast__Node w__parser__Parser__parse(Tokenizer* tokenizer, CompilerOption* co);
 void w__parser__Parser__free(w__parser__Parser* self);
 type_t w__parser__Parser__parseAnyType(w__parser__Parser* parser, Language lang);
 Array_w__ast__Statement w__parser__Parser_parse_block(w__parser__Parser *_r1);

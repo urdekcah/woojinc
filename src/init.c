@@ -11,7 +11,7 @@
 #include "table.h"
 #include "type.h"
 #include "node.h"
-#include "complier.h"
+#include "compiler.h"
 
 #define READSIZE 512
 
@@ -26,7 +26,7 @@ void Some(w__ast__Node helloworld) {
 
 void _winit(int _ac, char* _av[]) {
   setlocale(LC_ALL, "");
-  ComplierOption* co = w__complier__option_parse(_ac, _av);
+  CompilerOption* co = w__complier__option_parse(_ac, _av);
   unsigned int size = 0, length = 0;
   const char *wjext = ".wjc";
   for (int i = 0;i < _ac;i++) {
