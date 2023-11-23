@@ -55,11 +55,18 @@ enum TokenKind {
   TOKEN_KW_YEE,
   TOKEN_KW_TYPE,
   TOKEN_KW_STATIC,
+  TOKEN_KW_PUB,
   TOKEN_NUMBER_LITERAL,
   TOKEN_STRING_LITERAL,
   TOKEN_TRUE_LITERAL,
   TOKEN_FALSE_LITERAL,
   TOKEN_EOT
+};
+
+struct TokenPos {
+  int len;
+  int line, col;
+  int end_line;
 };
 
 struct Token {
@@ -71,4 +78,6 @@ struct Token {
 
 TokenKind w__Token__parse_string__kind(const char* _a1);
 char*     w__Token__kind_into__string(TokenKind _a1);
+void      w__Token__free(Token* _a1);
+TokenPos* w__TokenPos__from_Token(Token* _a1);
 #endif

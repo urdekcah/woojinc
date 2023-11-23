@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "woojin.h"
+#include "mem.h"
 #include "token.h"
 
 static struct {char* str; TokenKind kind;} w__Token__Token_String__Table[] = {
@@ -56,6 +58,7 @@ static struct {char* str; TokenKind kind;} w__Token__Token_String__Table[] = {
   {"yee",      TOKEN_KW_YEE},
   {"type",     TOKEN_KW_TYPE},
   {"static",   TOKEN_KW_STATIC},
+  {"pub",      TOKEN_KW_PUB},
   {NULL}
 };
 
@@ -73,4 +76,19 @@ char* w__Token__kind_into__string(TokenKind _a1) {
       return w__Token__Token_String__Table[i].str;
   }
   return NULL;
+}
+
+void w__Token__free(Token* _a1) {
+  Free((void*)_a1->token);
+  free(_a1);
+}
+
+TokenPos* w__TokenPos__from_Token(Token* _a1) {
+  TokenPos* self = calloc(1,sizeof(TokenPos));
+  if (self == NULL) ErrExit(E_MEMALLOC);
+  self->len = _a1->end_col - _a1->col;
+  self->line = _a1->line;
+  self->col = _a1->col;
+  self->end_line = _a1->end_line;
+  return self;
 }

@@ -6,48 +6,20 @@
 #include "mem.h"
 #include "error.h"
 #include "tokenizer.h"
+#include "parse.h"
 #include "map.h"
-
-#define READSIZE 512
+#include "table.h"
+#include "type.h"
+#include "init.h"
 
 int main(int argc, char *argv[]) {
-  setlocale(LC_ALL, "");
-  unsigned int size = 0, length = 0;
-  char* buffer = NULL;
-  FILE* file = NULL;
-  const char *wjext = ".wjc";
-  for (int i = 0;i < argc;i++) {
-    int a = strlen(argv[i]), b = strlen(wjext);
-    if (a>=b&&strcmp(argv[i]+a-b,wjext)==0) {
-      file = fopen(argv[i], "r");
-      if (file == NULL) EEXITD(E_OPENFILE, argv[i]);
-      while (!feof(file)) {
-        size += READSIZE;
-        char* temp = (char *)realloc(buffer, sizeof(char) * size);
-        if (temp == NULL) {
-          if (buffer) FREE(buffer);
-          EEXIT(E_MEMALLOC);
-        }
-        buffer = temp;
-        length += fread((buffer + size) - READSIZE, 1, READSIZE, file);
-      }
-      if (fclose(file) != 0) {
-        if (buffer) FREE(buffer);
-        EEXITD(E_CLOSEFILE, argv[2]);
-      }
-      if (!buffer) return 1;
-      buffer[length] = '\0';
-      break;
-    }
-  }
-  if (buffer == NULL) EEXIT(E_NOWJCF);
-  printf("code:\n%s\n", buffer);
-  Tokenizer* tz = w__Tokenizer__scan(buffer);
-  printf("\ntokens:\n");
-  for (size_t i = 0;i<tz->tokens.size;i++) {
-    printf("%4d %s\n", ((Token*)tz->tokens.items[i])->kind, ((Token*)tz->tokens.items[i])->token);
-  }
-  FREE(buffer);
-  FREE(tz);
+  _winit(argc, argv);
+  _wcleanup();
   return 0;
+}
+
+void* memdup(const void* mem, size_t size) { 
+  void* out = malloc(size);
+  if(out != NULL) memcpy(out, mem, size);
+  return out;
 }

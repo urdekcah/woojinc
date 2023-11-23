@@ -9,7 +9,7 @@
 #include "mem.h"
 #include "list.h"
 
-#define w__Tokenizer__mAppend_alltok(_m1,_m2) {Token*_m3=(Token*)calloc(1,sizeof(Token));if(_m3==NULL)EEXIT(E_MEMALLOC);*_m3=_m2;__list_append_list(&_m1->tokens,(void*)_m3);}
+#define w__Tokenizer__mAppend_alltok(_m1,_m2) {Token*_m3=(Token*)calloc(1,sizeof(Token));if(_m3==NULL)ErrExit(E_MEMALLOC);*_m3=_m2;__list_append_list(&_m1->tokens,(void*)_m3);}
 
 Tokenizer *w__Tokenizer__scan(char* _a1) {
   Tokenizer *_r1 = w__Tokenizer__new(_a1);
@@ -40,14 +40,14 @@ Tokenizer *w__Tokenizer__scan(char* _a1) {
 Token w__Tokenizer__scan_Number(Tokenizer* _a1) {
   int _r1 = 10;
   char* _r2 = (char*)calloc(_r1,sizeof(char));
-  if (_r2 == NULL) EEXIT(E_MEMALLOC);
+  if (_r2 == NULL) ErrExit(E_MEMALLOC);
   int _r3 = _a1->lineno, _r4 = _a1->coloff, _r5 = 0;
   while (w__Tokenizer__is_CharType(*(_a1->current), CharNumberLiteral)) {
     _a1->coloff++;_r2[_r5++] = *(_a1->current++);
     if (_r5 >= _r1) {
       _r1 *= 2;
       char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
-      if (_r6 == NULL) MULTI(FREE(_r2); EEXIT(E_MEMALLOC));
+      if (_r6 == NULL) MULTI(FreeAll(_r2); ErrExit(E_MEMALLOC));
       _r2 = _r6;
     }
   }
@@ -56,7 +56,7 @@ Token w__Tokenizer__scan_Number(Tokenizer* _a1) {
     if (_r5 >= _r1) {
       _r1 *= 2;
       char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
-      if (_r6 == NULL) MULTI(FREE(_r2); EEXIT(E_MEMALLOC));
+      if (_r6 == NULL) MULTI(FreeAll(_r2); ErrExit(E_MEMALLOC));
       _r2 = _r6;
     }
     while (w__Tokenizer__is_CharType(*(_a1->current), CharNumberLiteral)) {
@@ -64,7 +64,7 @@ Token w__Tokenizer__scan_Number(Tokenizer* _a1) {
       if (_r5 >= _r1) {
         _r1 *= 2;
         char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
-        if (_r6 == NULL) MULTI(FREE(_r2);EEXIT(E_MEMALLOC));
+        if (_r6 == NULL) MULTI(FreeAll(_r2);ErrExit(E_MEMALLOC));
         _r2 = _r6;
       }
     }
@@ -83,7 +83,7 @@ Token w__Tokenizer__scan_Number(Tokenizer* _a1) {
 Token w__Tokenizer__scan_String(Tokenizer* _a1) {
   int _r1 = 10;
   char* _r2 = (char*)calloc(_r1,sizeof(char));
-  if (_r2 == NULL) EEXIT(E_MEMALLOC);
+  if (_r2 == NULL) ErrExit(E_MEMALLOC);
   int _r3 = _a1->lineno, _r4 = _a1->coloff, _r5 = 0;
   _a1->coloff++;_a1->current++;
   while (w__Tokenizer__is_CharType(*(_a1->current), CharStringLiteral)) {
@@ -92,11 +92,11 @@ Token w__Tokenizer__scan_String(Tokenizer* _a1) {
     if (_r5 >= _r1) {
       _r1 *= 2;
       char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
-      if (_r6 == NULL) MULTI(FREE(_r2);EEXIT(E_MEMALLOC));
+      if (_r6 == NULL) MULTI(FreeAll(_r2);ErrExit(E_MEMALLOC));
       _r2 = _r6;
     }
   }
-  if (*_a1->current != '\"') EEXIT(E_UNCLOSEDSTR);
+  if (*_a1->current != '\"') ErrExit(E_UNCLOSEDSTR);
   _a1->coloff++;_a1->current++;
   _r2[_r5] = '\0';
   return (Token){
@@ -112,14 +112,14 @@ Token w__Tokenizer__scan_String(Tokenizer* _a1) {
 Token w__Tokenizer__scan_IdentKeyword(Tokenizer* _a1) {
   int _r1 = 10;
   char* _r2 = (char*)calloc(_r1,sizeof(char));
-  if (_r2 == NULL) EEXIT(E_MEMALLOC);
+  if (_r2 == NULL) ErrExit(E_MEMALLOC);
   int _r3 = _a1->lineno, _r4 = _a1->coloff, _r5 = 0;
   while (w__Tokenizer__is_CharType(*(_a1->current), CharIdentAndKeyword)) {
     _a1->coloff++;_r2[_r5++] = *(_a1->current++);
     if (_r5 >= _r1) {
       _r1 *= 2;
       char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
-      if (_r6 == NULL) MULTI(FREE(_r2);EEXIT(E_MEMALLOC));
+      if (_r6 == NULL) MULTI(FreeAll(_r2);ErrExit(E_MEMALLOC));
       _r2 = _r6;
     }
   }
@@ -139,14 +139,14 @@ Token w__Tokenizer__scan_IdentKeyword(Tokenizer* _a1) {
 Token w__Tokenizer__scan_Operator_Punctuator(Tokenizer* _a1) {
   int _r1 = 10;
   char* _r2 = (char*)calloc(_r1,sizeof(char));
-  if (_r2 == NULL) EEXIT(E_MEMALLOC);
+  if (_r2 == NULL) ErrExit(E_MEMALLOC);
   int _r3 = _a1->lineno, _r4 = _a1->coloff, _r5 = 0;
   while (w__Tokenizer__is_CharType(*(_a1->current), CharOperatorAndPunctuator)) {
     _a1->coloff++;_r2[_r5++] = *(_a1->current++);
     if (_r5 >= _r1) {
       _r1 *= 2;
       char* _r6 = (char*)realloc(_r2, sizeof(char) * _r1);
-      if (_r6 == NULL) MULTI(FREE(_r2);EEXIT(E_MEMALLOC));
+      if (_r6 == NULL) MULTI(FreeAll(_r2);ErrExit(E_MEMALLOC));
       _r2 = _r6;
     }
   }
@@ -155,7 +155,7 @@ Token w__Tokenizer__scan_Operator_Punctuator(Tokenizer* _a1) {
     _a1->coloff--;
     _a1->current--;
   }
-  if (_r5 == 0) EEXIT(E_UNKNOWNCH);
+  if (_r5 == 0) ErrExit(E_UNKNOWNCH);
   _r2[_r5] = '\0';
   return (Token){
     .kind = w__Token__parse_string__kind(_r2),
@@ -188,7 +188,7 @@ bool w__Tokenizer__is_CharType(char _a1, CharType _a2) {
 
 Tokenizer *w__Tokenizer__new(char* _a1) {
   Tokenizer *_r1 = (Tokenizer *)calloc(1,sizeof(Tokenizer));
-  if (_r1 == NULL) EEXIT(E_MEMALLOC);
+  if (_r1 == NULL) ErrExit(E_MEMALLOC);
   _r1->current = _a1;
   _r1->lineno = 1;
   _r1->coloff = 0;

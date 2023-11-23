@@ -1,5 +1,6 @@
 #ifndef __WOOJINC_TOKENIZER_H__
 #define __WOOJINC_TOKENIZER_H__
+#include <stdbool.h>
 #include "woojin.h"
 #include "token.h"
 #include "list.h"
