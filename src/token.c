@@ -1,94 +1,120 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "woojin.h"
-#include "mem.h"
 #include "token.h"
+#include "error.h"
 
-static struct {char* str; TokenKind kind;} w__Token__Token_String__Table[] = {
-  {"->",       TOKEN_ARROW},
-  {"&",        TOKEN_AMP},
-  {"+",        TOKEN_PLUS},
-  {"-",        TOKEN_MINUS},
-  {"*",        TOKEN_MUL},
-  {"/",        TOKEN_DIV},
-  {"&",        TOKEN_AND},
-  {"|",        TOKEN_PIPE},
-  {"&&",       TOKEN_ANDAND},
-  {"||",       TOKEN_OR},
-  {"!",        TOKEN_NOT},
-  {"$",        TOKEN_DOLLAR},
-  {":",        TOKEN_COLON},
-  {";",        TOKEN_SEMI},
-  {",",        TOKEN_COMMA},
-  {"?",        TOKEN_QUESTION},
-  {"=",        TOKEN_EQ},
-  {"==",       TOKEN_EQEQ},
-  {"!=",       TOKEN_NE},
-  {">",        TOKEN_GT},
-  {">=",       TOKEN_GE},
-  {"<",        TOKEN_LT},
-  {"<=",       TOKEN_LE},
-  {"//",       TOKEN_COMMENT},
-  {".",        TOKEN_DOT},
-  {"..",       TOKEN_DOTDOT},
-  {"(",        TOKEN_LPAREN},
-  {")",        TOKEN_RPAREN},
-  {"{",        TOKEN_LBRACE},
-  {"}",        TOKEN_RBRACE},
-  {"[",        TOKEN_LBRACKET},
-  {"]",        TOKEN_RBRACKET},
-  {"as",       TOKEN_KW_AS},
-  {"let",      TOKEN_KW_LET},
-  {"break",    TOKEN_KW_BREAK},
-  {"const",    TOKEN_KW_CONST},
-  {"continue", TOKEN_KW_CONTINUE},
-  {"else",     TOKEN_KW_ELSE},
-  {"enum",     TOKEN_KW_ENUM},
-  {"false",    TOKEN_FALSE_LITERAL},
-  {"true",     TOKEN_TRUE_LITERAL},
-  {"for",      TOKEN_KW_FOR},
-  {"fn",       TOKEN_KW_FN},
-  {"global",   TOKEN_KW_GLOBAL},
-  {"if",       TOKEN_KW_IF},
-  {"import",   TOKEN_KW_IMPORT},
-  {"in",       TOKEN_KW_IN},
-  {"is",       TOKEN_KW_IS},
-  {"mut",      TOKEN_KW_MUT},
-  {"yee",      TOKEN_KW_YEE},
-  {"type",     TOKEN_KW_TYPE},
-  {"static",   TOKEN_KW_STATIC},
-  {"pub",      TOKEN_KW_PUB},
-  {NULL}
+#define STATE_INIT 0
+#define STATE_NORMAL 1
+
+static TypeStrPair stringToType[] = {
+  {"bool", CORETYPE_BOOL},
+  {"i8", CORETYPE_I8},
+  {"i16", CORETYPE_I16},
+  {"i32", CORETYPE_I32},
+  {"i64", CORETYPE_I64},
+  {"i128", CORETYPE_I128},
+  {"u8", CORETYPE_U8},
+  {"u16", CORETYPE_U16},
+  {"u32", CORETYPE_U32},
+  {"u64", CORETYPE_U64},
+  {"u128", CORETYPE_U128},
+  {"f32", CORETYPE_F32},
+  {"f64", CORETYPE_F64},
+  {"f128", CORETYPE_F128},
+  {"char", CORETYPE_CHAR},
+  {"str", CORETYPE_STR},
+  {"array", CORETYPE_ARRAY},
+  {"object", CORETYPE_OBJECT},
+  {"unknown", CORETYPE_UNKNOWN},
 };
 
-TokenKind w__Token__parse_string__kind(const char* _a1) {
-  for(size_t i=0;w__Token__Token_String__Table[i].str!=NULL;i++) {
-    if (strcmp(w__Token__Token_String__Table[i].str, _a1) == 0)
-      return w__Token__Token_String__Table[i].kind;
+static KindStrPair stringToKind[] = {
+  {"#unknown",      UNKNOWN},
+  {"<first-token>", FIRST_TOKEN},
+  {"<last-token>",  LAST_TOKEN},
+  {"mut",           MUT},
+  {"#Type",         WJTYPE},
+  {"#Boolean",      BOOLEAN},
+  {"#Number",       NUMBER},
+  {"#String",       STRING},
+  {"#identifier",   IDENTIFIER},
+  {"fn",            FUNCTION},
+  {"ret",           RETURN},
+  {"let",           VARIABLE},
+  {"for",           FOR},
+  {"break",         BREAK},
+  {"continue",      CONTINUE},
+  {"if",            IF},
+  {"elif",          ELIF},
+  {"else",          ELSE},
+  {"&&",            LOGICALAND},
+  {"||",            LOGICALOR},
+  {"=",             ASSIGNMENT},
+  {"+",             ADD},
+  {"-",             SUBTRACT},
+  {"*",             MULTIPLY},
+  {"/",             DIVIDE},
+  {"%%",             MODULO},
+  {"==",            EQUAL},
+  {"!=",            NOTEQUAL},
+  {"<",             LESSTHEN},
+  {">",             GREATERTHAN},
+  {"<=",            LESSOREQUAL},
+  {">=",            GREATEROREQUAL},
+  {",",             COMMA},
+  {":",             COLON},
+  {";",             SEMI},
+  {"(",             LEFTPAREN},
+  {")",             RIGHTPAREN},
+  {"{",             LEFTBRACE},
+  {"}",             RIGHTBRACE},
+  {"[",             LEFTBRAKET},
+  {"]",             RIGHTBRAKET},
+};
+
+Kind parseKind(char* string) {
+  for(size_t i=0;i<sizeof(stringToKind)/sizeof(KindStrPair);i++) {
+    if (strcmp(stringToKind[i].str, string) == 0)
+      return stringToKind[i].kind;
   }
-  return TOKEN_UNKNOWN;
+  return UNKNOWN;
 }
 
-char* w__Token__kind_into__string(TokenKind _a1) {
-  for(size_t i=0;w__Token__Token_String__Table[i].str!=NULL;i++) {
-    if (w__Token__Token_String__Table[i].kind == _a1)
-      return w__Token__Token_String__Table[i].str;
+char* kindToString(Kind kind) {
+  for(size_t i=0;i<sizeof(stringToKind)/sizeof(KindStrPair);i++) {
+    if (stringToKind[i].kind == kind)
+      return stringToKind[i].str;
   }
   return NULL;
 }
 
-void w__Token__free(Token* _a1) {
-  Free((void*)_a1->token);
-  free(_a1);
+PrimitiveCoreType parseType(char* string) {
+  for(size_t i=0;i<sizeof(stringToType)/sizeof(TypeStrPair);i++) {
+    if (strcmp(stringToType[i].str, string) == 0)
+      return stringToType[i].coretype;
+  }
+  return CORETYPE_UNKNOWN;
 }
 
-TokenPos* w__TokenPos__from_Token(Token* _a1) {
-  TokenPos* self = calloc(1,sizeof(TokenPos));
-  if (self == NULL) ErrExit(E_MEMALLOC);
-  self->len = _a1->end_col - _a1->col;
-  self->line = _a1->line;
-  self->col = _a1->col;
-  self->end_line = _a1->end_line;
-  return self;
+char* typeToString(PrimitiveCoreType type) {
+  for(size_t i=0;i<sizeof(stringToType)/sizeof(TypeStrPair);i++) {
+    if (stringToType[i].coretype == type)
+      return stringToType[i].str;
+  }
+  return NULL;
+}
+
+tokstat* newTokStat(char* string) {
+  tokstat* ts = (struct tokstat*)malloc(sizeof(struct tokstat));
+  if (ts == NULL) errExit(EMSG_MEMALLOC_FAILED);
+  ts->current = string;
+  ts->tokidx = 0;
+  ts->tokcap = 1;
+  ts->lineno = 1;
+  ts->coloff = 0;
+  ts->state = STATE_INIT;
+  ts->err = 0;
+  ts->done = E_OK;
+  return ts;
 }

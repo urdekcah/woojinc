@@ -1,5 +1,5 @@
 GCC := gcc
-OPT := -g -Wall -Wextra -finput-charset=UTF-8 -Wno-unused-parameter -Wno-format-extra-args -Wformat=0
+OPT := -static -g -Wall -Wextra -finput-charset=UTF-8 -Wno-unused-parameter -Wno-format-extra-args -Wformat=0
 LDFLAGS :=
 TARGET := woojinc
 

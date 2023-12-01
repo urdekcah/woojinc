@@ -1,145 +1,115 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include "woojin.h"
-#include "mem.h"
 #include "error.h"
 #include "list.h"
-#include "type.h"
 
-List __list_new() {
-  List _r1 = __list_new_with_capacity(1);
-  return _r1;
+List* createList() {
+  List* list = (List*)malloc(sizeof(List));
+  if (list == NULL) errExit(EMSG_MEMALLOC_FAILED);
+  initList(list);
+  return list;
 }
 
-List* __list_mal() {
-  List* _r1 = (List*)calloc(1, sizeof(List));
-  if (_r1 == NULL) ErrExit(E_MEMALLOC);
-  _r1->capacity = 1;
-  _r1->size = 0;
-  _r1->items = (void **)calloc(_r1->capacity, sizeof(void *));
-  if (_r1->items == NULL) ErrExit(E_MEMALLOC);
-  return _r1;
+void initList(List* list) {
+  list->capacity = 1;
+  list->size = 0;
+  list->data = (void**)calloc(1, sizeof(void*));
+  if (list->data == NULL) errExit(EMSG_MEMALLOC_FAILED);
 }
 
-List __list_new_with_capacity(size_t _a1) {
-  List _r1;
-  memset(&_r1, 0, sizeof(List));
-  _r1.capacity = _a1;
-  _r1.size = 0;
-  _r1.items = (void **)calloc(_r1.capacity, sizeof(void *));
-  printf("size: %zu\n", _r1.size);
-  if (_r1.items == NULL) ErrExit(E_MEMALLOC);
-  return _r1;
-}
-
-void __list_realloc(List* _a1) {
-  printf("%d\n",_a1->capacity);
-  _a1->capacity *= 2;
-  void** temp = (void **)realloc(_a1->items, sizeof(void *) * _a1->capacity);
-  printf("temp: %d\n", temp == NULL);
-  if (temp == NULL) ErrExit(E_MEMALLOC);
-  _a1->items = temp;
-}
-
-void __list_init(List *_a1) {
-  _a1->capacity = 1;
-  _a1->size = 0;
-  _a1->items = (void **)calloc(_a1->capacity, sizeof(void *));
-  if (_a1->items == NULL) ErrExit(E_MEMALLOC);
-}
-
-void __list_append_list(List* _a1, void* _a2) {
-  printf("size: %d\n", _a1->size);
-  if (_a1->size >= _a1->capacity)  __list_realloc(_a1);
-  printf("size now: %d\n", _a1->size);
-  _a1->items[_a1->size++] = _a2;
-}
-
-void* __list_get_list_front(List* _a1) {
-  if (_a1->size == 0) ErrExit(E_EMPTYARR);
-  return _a1->items[0];
-}
-
-void* __list_get_list_back(List* _a1) {
-  if (_a1->size == 0) ErrExit(E_EMPTYARR);
-  return _a1->items[_a1->size - 1];
-}
-
-void* __list_push_front(List* _a1, void* _a2) {
-  if (_a1->size >= _a1->capacity) __list_realloc(_a1);
-  for (size_t i = _a1->size;i > 0;i--)
-    _a1->items[i] = _a1->items[i - 1];
-  _a1->items[0] = _a2;
-  _a1->size++;
-  return _a2;
-}
-
-void* __list_push_back(List* _a1, void* _a2) {
-  if (_a1->size >= _a1->capacity) __list_realloc(_a1);
-  _a1->items[_a1->size++] = _a2;
-  return _a2;
-}
-
-void* __list_pop_front(List* _a1) {
-  if (_a1->size == 0) ErrExit(E_EMPTYARR);
-  void* _r1 = _a1->items[0];
-  for (size_t i = 0;i < _a1->size - 1;i++)
-    _a1->items[i] = _a1->items[i + 1];
-  _a1->size--;
-  return _r1;
-}
-
-void* __list_pop_back(List* _a1) {
-  if (_a1->size == 0) ErrExit(E_EMPTYARR);
-  void* _r1 = _a1->items[_a1->size - 1];
-  _a1->size--;
-  return _r1;
-}
-
-void* __list_list__get(List* _a1, size_t _a2) {
-  if (_a1->size == 0) ErrExit(E_EMPTYARR);
-  if (_a2 > _a1->size) ErrExit(E_OUTOFBOUNDS);
-  return _a1->items[_a2];
-}
-
-void* __list_emplace_front(List* _a1, void* _a2) {
-  if (_a1->size < 1) {
-    __list_append_list(_a1, _a2);
-  } else {
-    if (_a1->size >= _a1->capacity) __list_realloc(_a1);
-    for (size_t i = _a1->size;i > 0;i--)
-      _a1->items[i] = _a1->items[i - 1];
-    _a1->items[0] = _a2;
-    _a1->size++;
+void appendList(List* list, void* item) {
+  if (list->size >= list->capacity) {
+    list->capacity *= 2;
+    list->data = (void**)realloc(list->data, sizeof(void*) * list->capacity);
+    if (list->data == NULL) errExit(EMSG_MEMALLOC_FAILED);
   }
-  return _a1->items[0];
+  list->data[list->size++] = item;
 }
 
-void* __list_emplace_back(List* _a1, void* _a2) {
-  __list_append_list(_a1, _a2);
-  return _a1->items[_a1->size - 1];
+void* pushFrontList(List* list, void* item) {
+  if (list->size >= list->capacity) {
+    list->capacity *= 2;
+    list->data = (void**)realloc(list->data, sizeof(void*) * list->capacity);
+    if (list->data == NULL) errExit(EMSG_MEMALLOC_FAILED);
+  }
+  for (size_t i = list->size; i > 0; i--)
+    list->data[i] = list->data[i - 1];
+  list->data[0] = item;
+  list->size++;
+  return item;
 }
 
-int __list_replace(List* _a1, size_t _a2, void* _a3) {
-  if (_a1 == NULL) return 0;
-  if (_a2 >= _a1->size) {
-    __list_append_list(_a1, _a3);
+void* pushBackList(List* list, void* item) {
+  if (list->size >= list->capacity) {
+    list->capacity *= 2;
+    list->data = (void**)realloc(list->data, sizeof(void*) * list->capacity);
+    if (list->data == NULL) errExit(EMSG_MEMALLOC_FAILED);
+  }
+  list->data[list->size] = item;
+  list->size++;
+  return item;
+}
+
+void* frontList(List* list) {
+  if (list->size == 0) errExit(EMSG_EMPTY_LIST);
+  return list->data[0];
+}
+
+void* backList(List* list) {
+  if (list->size == 0) errExit(EMSG_EMPTY_LIST);
+  return list->data[list->size - 1];
+}
+
+void* popFrontList(List* list) {
+  if (list->size == 0) errExit(EMSG_EMPTY_LIST);
+  void* frontElement = list->data[0];
+  for (size_t i = 1; i < list->size; i++)
+    list->data[i - 1] = list->data[i];
+  list->size--;
+  return frontElement;
+}
+
+void* popBackList(List* list) {
+  if (list->size == 0) errExit(EMSG_EMPTY_LIST);
+  void* backElement = list->data[list->size - 1];
+  list->size--;
+  return backElement;
+}
+
+void* emplaceFrontList(List* list, void* item) {
+  if (list->size == 0) {
+    appendList(list, item);
+  } else {
+    if (list->size == list->capacity) {
+      list->capacity *= 2;
+      list->data = (void**)realloc(list->data, list->capacity * sizeof(void*));
+      if (list->data == NULL) errExit(EMSG_MEMALLOC_FAILED);
+    }
+    for (size_t i = list->size; i > 0; i--) list->data[i] = list->data[i - 1];
+    list->data[0] = item;
+    list->size++;
+  }
+  return list->data[0];
+}
+
+void* emplaceBackList(List* list, void* item) {
+  appendList(list, item);
+  return list->data[list->size - 1];
+}
+
+int replaceList(List* list, size_t index, void* newValue) {
+  if (list == NULL) return 0;
+  if (index >= list->size) {
+    appendList(list, newValue);
     return 1;
   }
-  FreeAll(_a1->items[_a2]);
-  _a1->items[_a2] = _a3;
+  free(list->data[index]);
+  list->data[index] = newValue;
   return 1;
 }
 
-void __list_list_free(List* _a1) {
-  if (_a1 == NULL) return;
-  for (size_t i = 0;i < _a1->size;i++)
-    FreeAll(_a1->items[i]);
-  FreeAll(_a1->items);
-}
-
-bool __list_list_string_includes(List* _a1, char* _a2) {
-  for (size_t i = 0; i < _a1->size; i++) 
-    if (strcmp(_a1->items[i], _a2) == 0) return true;
-  return false;
+void freeList(List* list) {
+  free(list->data);
+  list->size = 0;
+  list->capacity = 0;
+  list->data = NULL;
 }

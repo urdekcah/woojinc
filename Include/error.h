@@ -1,112 +1,175 @@
 #ifndef __WOOJINC_ERROR_H__
 #define __WOOJINC_ERROR_H__
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <locale.h>
-#include <errno.h>
-#include "woojin.h"
-#include "token.h"
-#include "color.h"
+#include "errcode.h"
+#include "runtime.h"
 
-struct CompilerMessage { char* message; char* detail; char* filename; TokenPos pos; };
-struct Error { CompilerMessage msg; };
-struct Warning { CompilerMessage msg; };
-struct Notice { CompilerMessage msg; };
+void errExit(const wchar_t* format, ...);
+bool berrExit(const wchar_t* format, ...);
+void runtime_err(const wchar_t* format, ...);
 
-CompilerMessage* w__error__CompilerMessage__new(char* message, char* detail, char* filename, TokenPos pos);
-Error* w__error__Error__new(char* message, char* detail, char* filename, TokenPos pos);
-Warning* w__error__Warning__new(char* message, char* detail, char* filename, TokenPos pos);
-Notice* w__error__Notice__new(char* message, char* detail, char* filename, TokenPos pos);
-
-enum ComplierMessageKind { CM_ERROR, CM_WARNING, CM_NOTICE };
-
-void w__error__PrintCompilerMessage(CompilerMessage msg, ComplierMessageKind kind);
-#define w__errors__PrintErrorMessage(e) w__error__PrintCompilerMessage(e->msg, CM_ERROR)
-#define w__errors__PrintWarningMessage(e) w__error__PrintCompilerMessage(e->msg, CM_WARNING)
-#define w__errors__PrintNoticeMessage(e) w__error__PrintCompilerMessage(e->msg, CM_NOTICE)
-
-#define PrintComplierMessage(T) _Generic((T), \
-  Error*: w__errors__PrintErrorMessage, \
-  Warning*: w__errors__PrintWarningMessage, \
-  Notice*: w__errors__PrintNoticeMessage, \
-)(T)
-
-#define ChooseOneBrightONot(C, O) (O==true?C:C##_BRIGHT)
-#define PrintErrorConsoleColor(C) ChooseOneBrightONot(ANSI_FG_RED, C)
-#define PrintWarningConsoleColor(C) ChooseOneBrightONot(ANSI_FG_YELLOW, C)
-#define PrintNoticeConsoleColor(C) ChooseOneBrightONot(ANSI_FG_BLUE, C)
-#define MessageColorSwitch(T,C) (T==CM_ERROR?PrintErrorConsoleColor(C):(T==CM_WARNING?PrintWarningConsoleColor(C):PrintNoticeConsoleColor(C))) 
-#define ComplierMsgPrefix(T) (T==CM_ERROR?"error":(T==CM_WARNING?"warning":"note"))
-
-#define ComplierMessageConsoleColor(T,C) _Generic((T), \
-  Error*: PrintErrorConsoleColor(C), \
-  Warning*: PrintWarningConsoleColor(C), \
-  Notice*: PrintNoticeConsoleColor(C) \
-)(T);
-
-#define FreeComplierMessageMacro(x) {if(x == NULL)return;FreeAll(&x->msg);FreeAll(x);}
-void w__error__CompilerMessage__free(CompilerMessage* self);
-void w__error__Error__free(Error* self);
-void w__error__Warning__free(Warning* self);
-void w__error__Notice__free(Notice* self);
-
-#define FreeComplierMessage(e) _Generic((e), \
-  Error*: w__error__Error__free, \
-  Warning*: w__error__Warning__free, \
-  Notice*: w__error__Notice__free, \
-  CompilerMessage*: w__error__CompilerMessage__free \
-)(e)
-
-void printError(Error* err);
-
-void errExit(bool detail, const wchar_t* format, ...);
-wchar_t* FormatW(const wchar_t* format, ...);
-#define ErrExit(...) errExit(false, __VA_ARGS__)
-#define ErrDetailExit(...) errExit(true, __VA_ARGS__)
-void lastError();
-
-#define D(e) (*e)
-#define EK(co) (co.korean)
-#define E(e, co) EK(co)?e##_KR:e
-#define EP(e, p)  EK(D(p->co))?e##_KR:e
-
-#define E_PREFIX L"ПОМИЛКА"
-#define E_UNKNOWN_USAGE L"Використання: %S <command> <ім'я файлу>"
-#define E_NOCMD L"Такої команди не знайдено: %S"
-#define E_NOWJCF L".wjc файл не вказаний. Спробуйте ще раз."
-#define E_OPENFILE L"Файл %S не можливо відкрити. Переконайтеся, що файл існує або перевірте правильність введеного імені файлу, і спробуйте ще раз."
-#define E_CLOSEFILE L"Через цю помилку не вдалося закрити файл %S."
-#define E_MEMALLOC L"Виділення пам'яті не вдалося."
-#define E_UNCLOSEDSTR L"Схоже, рядок не був коректно закритий."
-#define E_UNKNOWNCH L"Це невідомий символ. Перевірте, чи ви ввели правильний символ."
-#define E_EMPTYARR L"Масив порожній."
-#define E_OUTOFBOUNDS L"Виходить за межі масиву."
+#ifdef __WOOJINC_ERROR_LANG_KO__
+#define EMSG_PRIFIX L"오류"
+#define EMSG_UNKNOWN_USAGE L"사용법: %S <명령어> <파일이름>\n"
+#define EMSG_UNKNOWN_COMMAND L"알 수 없는 명령어 %S\n"
+#define EMSG_FILEOPEN_FAILED L"파일 %S를 열 수 없습니다.\n"
+#define EMSG_FILECLOSE_FAILED L"파일 %S를 닫을 수 없습니다.\n"
+#define EMSG_MEMALLOC_FAILED L"메모리 할당에 실패했습니다.\n"
+#define EMSG_MAIN_FUNC_NOTFOUND L"메인 함수를 찾을 수 없습니다.\n"
+#define EMSG_CANNOT_DIVIDE_BYZ L"0으로 나눌 수 없습니다.\n"
+#define EMSG_CANNOT_MODULO_BYZ L"나머지 연산을 수행할 수 없습니다: 0으로 나눌 수 없습니다."
+#define EMSG_INVOPERA L"피연산자의 값이 유효한 값이나 변수가 아닙니다."
+#define EMSG_INVOPERA_RELATIONAL L"비교 연산자의 피연산자의 값이 유효한 값이나 변수가 아닙니다."
+#define EMSG_INVOPERA_ARITHMETIC L"산술 연산자의 피연산자 값은 유효한 값 또는 변수가 아닙니다."
+#define EMSG_INVOPERA_UNARY L"단항 연산의 피연산자가 유효한 값이나 변수가 아닙니다."
+#define EMSG_CANNOT_ASSIGN L"이 표현식에는 할당 연산을 수행할 수 없습니다."
+#define EMSG_WRONG_EXPR L"올바르지 않은 표현식입니다. (행: %d, 열: %d)"
+#define EMSG_INVAL_STMT L"유효하지 않은 구문: %S (%d행)\n"
+#define EMSG_INVAL_BOOL L"유효하지 않은 논리 자료형입니다. (%d행 %d열)"
+#define EMSG_INVAL_NUMLIT L"유효하지 않은 숫자 리터럴입니다. (%d행 %d열)"
+#define EMSG_UNEXPECTED_TOKEN L"예상했던 토큰은 %S이지만 %S을 받았습니다 (%d행 %d열)"
+#define EMSG_NOEXPR L"표현식이 표현식 문에서 누락되었습니다."
+#define EMSG_NOEXPR_RET L"반환문 안에서 표현식이 누락되었습니다."
+#define EMSG_NOCONDI_IF L"조건문 안에서 표현식이 누락되었습니다."
+#define EMSG_NOINIT_EXPR_LOOP L"루프 안에 초기화 표현식이 없습니다."
+#define EMSG_NOCONDI_LOOP L"for 루프 안에 조건 표현식이 없습니다."
+#define EMSG_NOEXPR_LOOP L"for 루프 안에 표현식이 없습니다."
+#define EMSG_NOINIT_EXPR_VARDEC L"변수 선언에 초기화 표현식이 없습니다 (변수: %S)"
+#define EMSG_CLOSE_STRING L"문자열 리터럴이 닫히지 않았습니다."
+#define EMSG_UNEXPECTED_EOT L"예상치 못한 토큰의 끝 (라인 %d)\n"
+#define EMSG_INVALCH L"사용할 수 없는 문자입니다."
+#define EMSG_EMPTY_LIST L"리스트가 비어 있습니다."
+#define EMSG_UNKNOWN_BUILTIN L"내장 함수를 찾을 수 없습니다."
+#define EMSG_NOTNUMBER L"`%S`는 숫자로 변환할 수 없는 값입니다."
+#define EMSG_CANNOT_ADD L"%s에 %s를 더할 수 없습니다"
+#define EMSG_CANNOT_SUB L"`%S`에서 `%S`을 뺄 수 없습니다."
+#define EMSG_CANNOT_MUL L"`{%S}`을(를) `%S`로 곱할 수 없습니다."
+#define EMSG_CANNOT_DIVIDE L"`{%S}`를 `{%S}`으로(로) 나눌 수 없습니다."
+#define EMSG_CANNOT_MOD L"`%S`를 `%S`로 나눈 나머지를 계산할 수 없습니다."
+#define EMSG_TYPE_MISMATCH L"일치하지 않는 타입입니다. 기대값: `%S`, 발견된 타입: `%S`."
+#elif defined(__WOOJINC_ERROR_LANG_EN__)
+#define EMSG_PRIFIX L"Error"
+#define EMSG_UNKNOWN_USAGE L"Usage: %S <command> <filename>\n"
+#define EMSG_UNKNOWN_COMMAND L"Unknown command %S\n"
+#define EMSG_FILEOPEN_FAILED L"Unable to open file %S\n"
+#define EMSG_FILECLOSE_FAILED L"Unable to close file %S\n"
+#define EMSG_MEMALLOC_FAILED L"Memory allocation failed\n"
+#define EMSG_MAIN_FUNC_NOTFOUND L"Main function not found\n"
+#define EMSG_CANNOT_DIVIDE_BYZ L"Cannot devide by zero\n"
+#define EMSG_CANNOT_MODULO_BYZ L"Cannot perform modulo operation: Division by zero."
+#define EMSG_INVOPERA L"The operand's value is not a valid value or variable."
+#define EMSG_INVOPERA_RELATIONAL L"The operands of the comparison operator are not valid values or variables."
+#define EMSG_INVOPERA_ARITHMETIC L"The operands of the arithmetic operator are not valid values or variables."
+#define EMSG_INVOPERA_UNARY L"The operand for the unary operation is not a valid value or variable."
+#define EMSG_CANNOT_ASSIGN L"Assignment operation cannot be performed on this expression."
+#define EMSG_WRONG_EXPR L"Invalid expression (at line %d, column %d)"
+#define EMSG_INVAL_STMT L"Invalid statement: %S (line %d)\n"
+#define EMSG_INVAL_BOOL L"Invalid boolean data type. (at line %d, column %d)"
+#define EMSG_INVAL_NUMLIT L"Invalid numeric data type literal. (at line %d, column %d)"
+#define EMSG_UNEXPECTED_TOKEN L"Expected Token %S but got %S (at line %d offset %d)"
+#define EMSG_NOEXPR L"Expression is missing in the expression statement."
+#define EMSG_NOEXPR_RET L"An expression is missing inside the return statement."
+#define EMSG_NOCONDI_IF L"There is no condition expression in the if statement."
+#define EMSG_NOINIT_EXPR_LOOP L"There is no initialization expression in the for loop."
+#define EMSG_NOCONDI_LOOP L"There is no condition expression in the for loop."
+#define EMSG_NOEXPR_LOOP L"There is no expression in the for loop."
+#define EMSG_NOINIT_EXPR_VARDEC L"There is no initialization expression in the variable declaration (variable: %S)."
+#define EMSG_CLOSE_STRING L"The string literal is not closed"
+#define EMSG_UNEXPECTED_EOT L"Unexpected end of tokens (line %d)\n"
+#define EMSG_INVALCH L"Invalid character."
+#define EMSG_EMPTY_LIST L"List is empty"
+#define EMSG_UNKNOWN_BUILTIN L"Built-in function not found."
+#define EMSG_RTPRI L"Runtime error"
+#define EMSG_NOTNUMBER L"`%s` is not something that can be converted to a number."
+#define EMSG_CANNOT_ADD L"Cannot add a %S to an %S."
+#define EMSG_CANNOT_SUB L"Cannot subtract `%S` from `%S`."
+#define EMSG_CANNOT_MUL L"Cannot multiply `%S` by `%S`."
+#define EMSG_CANNOT_DIVIDE L"Cannot divide `%S` by `%S`."
+#define EMSG_CANNOT_MOD L"Cannot calculate the remainder of `%S` divided by `%S`."
+#define EMSG_TYPE_MISMATCH L"Mismatched types. Expected `%S`, found `%S`."
+#elif defined(__WOOJINC_ERROR_LANG_UA__)
+#define EMSG_PRIFIX L"Помилка"
+#define EMSG_UNKNOWN_USAGE L"Використання: %S <команда> <ім'я файлу>\n"
+#define EMSG_UNKNOWN_COMMAND L"Невідома команда %S\n"
+#define EMSG_FILEOPEN_FAILED L"Неможливо відкрити файл %S\n"
+#define EMSG_FILECLOSE_FAILED L"Неможливо закрити файл %S\n"
+#define EMSG_MEMALLOC_FAILED L"Помилка при виділенні пам'яті\n"
+#define EMSG_MAIN_FUNC_NOTFOUND L"Головна функція не знайдена\n"
+#define EMSG_CANNOT_DIVIDE_BYZ L"Не можна ділити на нуль\n"
+#define EMSG_CANNOT_MODULO_BYZ L"Не можна виконати операцію модуль: Ділення на нуль."
+#define EMSG_INVOPERA L"Значення операнду не є дійсним значенням або змінною."
+#define EMSG_INVOPERA_RELATIONAL L"Операнди оператора порівняння не є дійсними значеннями або змінними."
+#define EMSG_INVOPERA_ARITHMETIC L"Операнди арифметичного оператора не є дійсними значеннями або змінними."
+#define EMSG_INVOPERA_UNARY L"Операнд для унарної операції не є дійсним значенням або змінною."
+#define EMSG_CANNOT_ASSIGN L"Неможливо виконати операцію присвоєння для цього виразу."
+#define EMSG_WRONG_EXPR L"Невірний вираз. (на рядку %d, зсув %d)"
+#define EMSG_INVAL_STMT L"Недійсне речення: %S (на рядку %d)\n"
+#define EMSG_INVAL_BOOL L"Недійсний булевий тип даних. (на рядку %d, зсув %d)"
+#define EMSG_INVAL_NUMLIT L"Недійсний літерал числового типу даних. (на рядку %d, зсув %d)"
 #define EMSG_UNEXPECTED_TOKEN L"Очікувався токен %S, але отримано %S (на рядку %d, зсув %d)"
-#define E_ALREADY_IMPORTED L"Ви вже імпортували цей файл."
-#define E_ALREADY_IMPORTED_MODULE L"Ви вже імпортували модуль %S."
-#define EMSG_REDECLARED_VAR L"Змінна %S вже була оголошена (на рядку %d, зсув %d)"
-#define EMSG_REDEFINED_VAR L"Змінна %S вже була оголошена (на рядку %d, зсув %d)"
-#define EMESG_UNDECLARED_VAR L"Змінна %S не була оголошена (на рядку %d, зсув %d)"
-
-#ifndef __WOOJINC_COMPILE_NOT_INCLUDE_KOREAN__
-#define E_PREFIX_KR L"오류"
-#define E_UNKNOWN_USAGE_KR L"사용법: %S <command> <파일 이름>"
-#define E_NOCMD_KR L"그런 명령어를 찾을 수 없습니다: %S"
-#define E_NOWJCF_KR L".wjc 파일이 지정되지 않았습니다. 다시 시도해보세요."
-#define E_OPENFILE_KR L"%S 파일을 열 수 없습니다. 파일이 존재하는지 또는 입력한 파일 이름이 올바른지 확인하고 다시 시도해보세요."
-#define E_CLOSEFILE_KR L"파일 %S을(를) 닫는 데 실패했습니다."
-#define E_MEMALLOC_KR L"메모리 할당에 실패했습니다."
-#define E_UNCLOSEDSTR_KR L"문자열이 제대로 닫히지 않았습니다."
-#define E_UNKNOWNCH_KR L"이 문자는 알 수 없습니다. 올바른 문자를 입력했는지 확인하세요."
-#define E_EMPTYARR_KR L"배열이 비어있습니다."
-#define E_OUTOFBOUNDS_KR L"배열의 범위를 벗어났습니다."
-#define EMSG_UNEXPECTED_TOKEN_KR L"토큰 %S이(가) 예상되었지만 %S이(가) 입력되었습니다 (줄 %d, 위치 %d)"
-#define E_ALREADY_IMPORTED_KR L"이 파일은 이미 가져왔습니다."
-#define E_ALREADY_IMPORTED_MODULE_KR L"모듈 %S은(는) 이미 가져왔습니다."
-#define EMSG_REDECLARED_VAR_KR L"변수 %S은(는) 이미 선언되었습니다 (줄 %d, 위치 %d)"
-#define EMSG_REDEFINED_VAR_KR L"변수 %S은(는) 이미 선언되었습니다 (줄 %d, 위치 %d)"
-#define EMESG_UNDECLARED_VAR_KR L"변수 %S은(는) 선언되지 않았습니다 (줄 %d, 위치 %d)"
+#define EMSG_NOEXPR L"Відсутнє вираз у виразі."
+#define EMSG_NOEXPR_RET L"У операторі return відсутнє вираз."
+#define EMSG_NOCONDI_IF L"У операторі if відсутній умовний вираз."
+#define EMSG_NOINIT_EXPR_LOOP L"У циклі for відсутній вираз ініціалізації."
+#define EMSG_NOCONDI_LOOP L"У циклі for відсутній умовний вираз."
+#define EMSG_NOEXPR_LOOP L"У циклі for відсутній вираз."
+#define EMSG_NOINIT_EXPR_VARDEC L"У оголошенні змінної відсутній вираз ініціалізації (змінна: %S)."
+#define EMSG_CLOSE_STRING L"Рядковий літерал не закритий."
+#define EMSG_UNEXPECTED_EOT L"Неочікуваний кінець токенів (рядок %d)\n"
+#define EMSG_INVALCH L"Недопустимий символ."
+#define EMSG_EMPTY_LIST L"список порожній"
+#define EMSG_UNKNOWN_BUILTIN L"Вбудовану функцію не знайдено."
+#define EMSG_RTPRI L"Помилка під час виконання"
+#define EMSG_NOTNUMBER L"`%s` - це не щось, що можна перетворити в число."
+#define EMSG_CANNOT_ADD L"Неможливо додати %S до %S"
+#define EMSG_CANNOT_SUB L"Неможливо відняти `%S` від `%S`."
+#define EMSG_CANNOT_MUL L"Неможливо помножити `%S` на `%S`."
+#define EMSG_CANNOT_DIVIDE L"Неможливо поділити `%S` на `%S`."
+#define EMSG_CANNOT_MOD L"Неможливо обчислити залишок від ділення `%S` на `%S`."
+#define EMSG_TYPE_MISMATCH L"Неспівпадають типи. Очікувалось `%S`, знайдено `%S`."
+#else
+#define EMSG_PRIFIX L"Ошибка"
+#define EMSG_UNKNOWN_USAGE L"Использование: %S <команда> <имя файла>"
+#define EMSG_UNKNOWN_COMMAND L"Неизвестная команда %S\n"
+#define EMSG_FILEOPEN_FAILED L"Не могу открыть файл %S"
+#define EMSG_FILECLOSE_FAILED L"Не удалось закрыть файл %S\n"
+#define EMSG_MEMALLOC_FAILED L"Ошибка при выделении памяти\n"
+#define EMSG_MAIN_FUNC_NOTFOUND L"Главная функция не найдена\n"
+#define EMSG_CANNOT_DIVIDE_BYZ L"Нельзя делить на ноль\n"
+#define EMSG_CANNOT_MODULO_BYZ L"Невозможно выполнить операцию модуль: Деление на ноль."
+#define EMSG_INVOPERA L"Значение операнда не является допустимым значением или переменной."
+#define EMSG_INVOPERA_RELATIONAL L"Операнды оператора сравнения не являются допустимыми значениями или переменными."
+#define EMSG_INVOPERA_ARITHMETIC L"Операнды арифметического оператора не являются допустимыми значениями или переменными."
+#define EMSG_INVOPERA_UNARY L"Операнд для унарной операции не является допустимым значением или переменной."
+#define EMSG_CANNOT_ASSIGN L"Невозможно выполнить операцию присваивания для этого выражения."
+#define EMSG_WRONG_EXPR L"Неверное выражение. (в строке %d, смещение %d)"
+#define EMSG_INVAL_STMT L"Недопустимое выражение: %S (в строке %d)\n"
+#define EMSG_INVAL_BOOL L"Недопустимый тип данных для логической переменной. (в строке %d, смещение %d)"
+#define EMSG_INVAL_NUMLIT L"Недопустимый литерал числового типа данных. (в строке %d, смещение %d)"
+#define EMSG_UNEXPECTED_TOKEN L"Ожидался токен %S, но получен %S (в строке %d, смещение %d)"
+#define EMSG_NOEXPR L"Отсутствует выражение в операторе выражения."
+#define EMSG_NOEXPR_RET L"В операторе return отсутствует выражение."
+#define EMSG_NOCONDI_IF L"В операторе if отсутствует условное выражение."
+#define EMSG_NOINIT_EXPR_LOOP L"В цикле for отсутствует выражение инициализации."
+#define EMSG_NOCONDI_LOOP L"В цикле for отсутствует условное выражение."
+#define EMSG_NOEXPR_LOOP L"В цикле for отсутствует выражение."
+#define EMSG_NOINIT_EXPR_VARDEC L"В объявлении переменной отсутствует выражение инициализации (переменная: %S)."
+#define EMSG_CLOSE_STRING L"Строковый литерал не закрыт."
+#define EMSG_UNEXPECTED_EOT L"Неожиданный конец токенов (строка %d)\n"
+#define EMSG_INVALCH L"Недопустимый символ."
+#define EMSG_EMPTY_LIST L"список пуст"
+#define EMSG_UNKNOWN_BUILTIN L"Встроенная функция не найдена."
+#define EMSG_RTPRI L"Ошибка времени выполнения"
+#define EMSG_NOTNUMBER L"`%S` нельзя преобразовать в число."
+#define EMSG_CANNOT_ADD L"Невозможно добавить %S к %S"
+#define EMSG_CANNOT_SUB L"Невозможно вычесть `%S` из `%S`."
+#define EMSG_CANNOT_MUL L"Невозможно умножить `%S` на `%S`."
+#define EMSG_CANNOT_DIVIDE L"Невозможно разделить `%S` на `%S`."
+#define EMSG_CANNOT_MOD L"Невозможно вычислить остаток от деления `%S` на `%S`."
+#define EMSG_TYPE_MISMATCH L"Несовпадение типов. Ожидалось `%S`, найдено `%S`."
 #endif
-
 #endif
